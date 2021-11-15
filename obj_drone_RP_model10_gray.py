@@ -163,14 +163,14 @@ for seed in range(778,779):
     train_dataset = torch.utils.data.DataLoader(dataset=train,
                                               batch_size=batch_size,
                                               shuffle=True,
-                                              num_workers = 32,
+                                              num_workers = 16,
                                               drop_last=False,
                                               pin_memory = True)
     vali_dataset = torch.utils.data.DataLoader(dataset=vali,
                                               batch_size=batch_size,
                                               shuffle=True,
                                               drop_last=False,
-                                              num_workers = 32,
+                                              num_workers = 16,
                                               pin_memory = True)
     # test_data = torch.utils.data.DataLoader(dataset=test,
     #                                           batch_size=1,
