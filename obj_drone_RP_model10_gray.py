@@ -408,7 +408,7 @@ for seed in range(778,779):
                 
                 
         if avg_cost < 10:
-            pltmode = 1
+            pltmode = 0
         if pltmode == 1:
             stack_loss = np.append(stack_loss,avg_cost.detach().to('cpu'))
             stack_vali_loss = np.append(stack_vali_loss, vali_avg_cost.detach().to('cpu'))
@@ -482,8 +482,8 @@ for seed in range(778,779):
             total_imgs = np.concatenate((train_imgs,vali_imgs),axis=0)
             total_imgs = cv2.resize(total_imgs,(1280,720), interpolation=cv2.INTER_AREA)
             
-            cv2.imshow('{}'.format(model_N),total_imgs)
-            cv2.waitKey(10)           
+  #          cv2.imshow('{}'.format(model_N),total_imgs)
+  #          cv2.waitKey(10)           
             cv2.imwrite('{}/{}_{}_{}train.jpg'.format(trainpath,i, epoch +1, avg_cost),total_imgs)
 
          ## save model
