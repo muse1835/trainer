@@ -33,7 +33,7 @@ stack_epoch = []
 # os.environ["CUDA_VISIBLE_DEVICES"]="1,2,3"
 # os.environ["CUDA_LAUNCH_BLOCKING"] = "1"7
 #torch.multiprocessing.get_context('spawn')
-device = torch.device('cuda:1')
+device = torch.device('cuda:0')
 torch.cuda.set_device(device)
 
 for seed in range(778,779):  
