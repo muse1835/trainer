@@ -190,8 +190,8 @@ for seed in range(778,779):
     for i in range(len(vali_dataset.dataset.indices)):
         val_list = np.append(val_list, train_balls_frame.iloc[vali_dataset.dataset.indices[i],4])
     val_list = list(val_list)
-    np.save("RP_result/model{}".format(folder), train_list)
-    np.save("RP_result/model{}".format(folder), val_list)
+    np.save("{}/model{}".format(save_path,folder), train_list)
+    np.save("{}/model{}".format(save_path,folder), val_list)
     
 
     # CNN Model (2 conv layers)
