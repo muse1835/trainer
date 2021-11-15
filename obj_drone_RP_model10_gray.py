@@ -73,7 +73,7 @@ for seed in range(778,779):
     img_height = 720
     learning_rate = 0.0001
     training_epochs = 2000
-    batch_size = 16
+    batch_size = 128
     
     ## image dataset
     train_balls_frame = pd.read_csv('{}/data_0422.csv'.format(train_path))
@@ -163,14 +163,14 @@ for seed in range(778,779):
     train_dataset = torch.utils.data.DataLoader(dataset=train,
                                               batch_size=batch_size,
                                               shuffle=True,
-                                              num_workers = 8,
+                                              num_workers = 16,
                                               drop_last=False,
                                               pin_memory = True)
     vali_dataset = torch.utils.data.DataLoader(dataset=vali,
                                               batch_size=batch_size,
                                               shuffle=True,
                                               drop_last=False,
-                                              num_workers = 8,
+                                              num_workers = 16,
                                               pin_memory = True)
     # test_data = torch.utils.data.DataLoader(dataset=test,
     #                                           batch_size=1,
@@ -363,7 +363,7 @@ for seed in range(778,779):
     # model = nn.DataParallel(CNN().cuda(), device_ids=[2,3])
     # CNN().cuda()
     model = RPN().cuda()
-    model = nn.DataParallel(model,device_ids=[1,2,3]).cuda()
+    model = nn.DataParallel(model,device_ids=[0,1,2,3]).cuda()
 
 #    model.eval()
     criterion = torch.nn.MSELoss().cuda()
