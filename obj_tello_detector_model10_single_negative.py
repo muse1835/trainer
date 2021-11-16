@@ -35,8 +35,8 @@ for seed in range(778,779):
     date = '1116'
     model_N = '100_GIOU'
     folder = '21{}_crop_model{}'.format(date,model_N)
-    path = "/home/wr/total_0422_negative/crop_negative"
-    train_path = "/home/wr/total_0422_negative/crop_negative"
+    path = "total_0422/crop_negative"
+    train_path = "total_0422/crop_negative"
     save_path = '{}_result'.format(date)
     
     #create new folder
