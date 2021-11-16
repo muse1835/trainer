@@ -58,7 +58,7 @@ for seed in range(778,779):
     image_size = 100
     learning_rate = 0.0001
     training_epochs = 2000
-    batch_size = 2048
+    batch_size = 1024
     
     ## image dataset
     train_balls_frame = pd.read_csv('{}/data.csv'.format(train_path))
@@ -129,13 +129,13 @@ for seed in range(778,779):
     
     train_dataset = torch.utils.data.DataLoader(dataset=train,
                                                batch_size=batch_size,
-                                               num_workers=32, 
+                                               num_workers=16, 
                                                shuffle=True,
                                                drop_last=False,
                                                pin_memory = True)
     vali_dataset = torch.utils.data.DataLoader(dataset=vali,
                                                batch_size=batch_size,
-                                               num_workers=32, 
+                                               num_workers=16, 
                                                shuffle=True,
                                                drop_last=False,
                                                pin_memory = True)
