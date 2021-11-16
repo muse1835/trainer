@@ -24,7 +24,7 @@ stack_loss = []
 stack_vali_loss = []
 stack_epoch = []
 pre_T = 0
-plot_mode = 1
+plot_mode = 0
 pre_path = '1'
 pre_best_path = '1'
 best_IoU = 0.1
@@ -363,7 +363,7 @@ for seed in range(778,779):
             plt.plot(stack_epoch, stack_vali_loss)
             plt.show()
 
-        print('{} [{:>4}] cost= [{:>.5} / {:>.5}] / IOU= [{:>.5} / {:>.5}] / time= {:>.3}, ETA= {:>.3}h'.format(model_N,epoch + 1, avg_cost, vali_avg_cost,train_mIOU,vali_mIOU,time.time()-pre_T, (time.time()-pre_T)*(training_epochs-epoch)/3600))
+        print('{} [{:>4}] cost= [{:>.5} / {:>.5}] / IOU= [{:>.5} / {:>.5}] / time= {:>.4}, ETA= {:>.4}h'.format(model_N,epoch + 1, avg_cost, vali_avg_cost,train_mIOU,vali_mIOU,time.time()-pre_T, (time.time()-pre_T)*(training_epochs-epoch)/3600))
         pre_T = time.time()
 
     
