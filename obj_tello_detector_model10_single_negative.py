@@ -58,7 +58,7 @@ for seed in range(778,779):
     image_size = 100
     learning_rate = 0.0001
     training_epochs = 2000
-    batch_size = 512
+    batch_size = 2048
     
     ## image dataset
     train_balls_frame = pd.read_csv('{}/data.csv'.format(train_path))
