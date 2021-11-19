@@ -138,8 +138,8 @@ for seed in range(778,779):
             balls = self.balls_frame.iloc[idx, :4]/10
             balls[0] = balls[0]/128
             balls[1] = balls[1]/72
-            balls[2] = balls[3]/128
-            balls[3] = balls[4]/72
+            balls[2] = balls[2]/128
+            balls[3] = balls[3]/72
             balls = np.array([balls])
             balls = balls.astype('float').reshape(4)
             # sample = {'image': image, 'balls': balls}
