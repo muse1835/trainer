@@ -135,11 +135,13 @@ for seed in range(778,779):
             # image[0,:,:] = (image[0,:,:] - np.mean(image[0,:,:]))/ np.std(image[0,:,:])
             # image[1,:,:] = (image[1,:,:] - np.mean(image[1,:,:]))/ np.std(image[1,:,:])
             # image[2,:,:] = (image[2,:,:] - np.mean(image[2,:,:]))/ np.std(image[2,:,:])
-            balls = self.balls_frame.iloc[idx, :2]/10
+            balls = self.balls_frame.iloc[idx, :4]/10
             balls[0] = balls[0]/128
             balls[1] = balls[1]/72
+            balls[3] = balls[3]/128
+            balls[4] = balls[4]/72
             balls = np.array([balls])
-            balls = balls.astype('float').reshape(2)
+            balls = balls.astype('float').reshape(4)
             # sample = {'image': image, 'balls': balls}
 #            dummy = np.ones([3,72,128])
 #            X = torch.cuda.FloatTensor(dummy)
@@ -344,7 +346,7 @@ for seed in range(778,779):
                 torch.nn.BatchNorm2d(32),
                 torch.nn.Dropout(0.2), 
                 
-                torch.nn.Conv2d(32, 2, kernel_size=2, stride=2, padding=0)).cuda()
+                torch.nn.Conv2d(32, 4, kernel_size=2, stride=2, padding=0)).cuda()
     
             # Final FC 7x7x64 inputs -> 10 outputs
     #            self.fc = torch.nn.Linear(784, 3, bias=True).cuda()
@@ -354,7 +356,7 @@ for seed in range(778,779):
             out = self.layer1(x).cuda()
     #             out = torch.mean(x.view(x.size(0), x.size(1), 1,1),dim=2)
     #            print(out.size)
-            out = out.view(-1, 2).cuda()   # Flatten them for FC
+            out = out.view(-1, 4).cuda()   # Flatten them for FC
     #            out = self.fc(out)
             return out
         
@@ -433,7 +435,7 @@ for seed in range(778,779):
     #            train_X_tensor = torch.cuda.FloatTensor(train_X.transpose(2,0,1))
                 train_Y = model(train_X_tensor.reshape([1,3,img_height,img_width]))
                 train_Y = train_Y.detach().to('cpu')
-                train_Y = train_Y.reshape([2])
+                train_Y = train_Y.reshape([4])
                 train_Y[0] = train_Y[0]*img_width
                 train_Y[1] = train_Y[1]*img_height
     #            train_iou = iou_1(train_Y, plot_Y)
@@ -461,7 +463,7 @@ for seed in range(778,779):
                 plot_vali_X_tensor = torch.cuda.FloatTensor(plot_vali_X.transpose(2,0,1))
                 plot_vali_Y = model(plot_vali_X_tensor.reshape([1,3,img_height,img_width]))
                 plot_vali_Y = plot_vali_Y.to('cpu')
-                plot_vali_Y = plot_vali_Y.reshape([2])
+                plot_vali_Y = plot_vali_Y.reshape([4])
                 plot_vali_Y[0] = plot_vali_Y[0]*img_width
                 plot_vali_Y[1] = plot_vali_Y[1]*img_height
     #            vali_iou = iou_1(plot_vali_Y, refer_Y_vali)
