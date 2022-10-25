@@ -32,11 +32,11 @@ device = torch.device('cuda:0')
 torch.cuda.set_device(device)
 
 for seed in range(778,779):  
-    date = '1116'
+    date = '0817'
     model_N = '100_GIOU'
-    folder = '21{}_crop_model{}'.format(date,model_N)
-    path = "total_0422/crop_negative"
-    train_path = "total_0422/crop_negative"
+    folder = '22{}_crop_model{}'.format(date,model_N)
+    path = "train_data/crop_negative_blurred35"
+    train_path = "train_data/crop_negative_blurred35"
     save_path = '{}_result'.format(date)
     
     #create new folder
@@ -57,8 +57,8 @@ for seed in range(778,779):
     # parameters
     image_size = 100
     learning_rate = 0.0001
-    training_epochs = 2000
-    batch_size = 1024
+    training_epochs = 5000
+    batch_size = 32
     
     ## image dataset
     train_balls_frame = pd.read_csv('{}/data.csv'.format(train_path))
@@ -71,7 +71,7 @@ for seed in range(778,779):
     # num_test = int(n * portion_test)
     # num_train = n - num_vali
     
-    portion_vali = 0.1
+    portion_vali = 0.05
     num_vali = int(n * portion_vali)
     num_train = n - num_vali
     
@@ -80,8 +80,7 @@ for seed in range(778,779):
     
 #    negative_dummy = len(negative_frame)- int(0.1*len(negative_frame))
     class Balldataset(Dataset):
-        """Face Landmarks dataset."""
-    
+            
         def __init__(self, csv_file, root_dir, transform=None):
             """
             Args:
@@ -89,7 +88,7 @@ for seed in range(778,779):
                 root_dir (string): 모든 이미지가 존재하는 디렉토리 경로
                 transform (callable, optional): 샘플에 적용될 Optional transform
             """
-            self.balls_frame = pd.read_csv('{}/data.csv'.format(root_dir))
+            self.label_list = os.listdir(root_dir)
             self.root_dir = root_dir
             self.transform = 'transform'
             
@@ -107,13 +106,14 @@ for seed in range(778,779):
             image = cv2.resize(image,(image_size,image_size), interpolation=cv2.INTER_AREA)
             image = image.reshape(image_size, image_size, 3)
             image = image.transpose(2,0,1)
-            balls = self.balls_frame.iloc[idx, :4]
-            label = np.empty((5))
-            label[:4] = balls[:4]/200
+            label = list(np.loadtxt('{}/{}'.format(root_dir,self.label_list[idx]))[1:])
+            #balls = self.balls_frame.iloc[idx, :4]
+            #label = np.empty((5))
+            #label[:4] = balls[:4]/200
             if sum(label[:2]) != 0:
-                label[4] = 1
+                label = label + list([1])
             elif sum(label[:2]) == 0:
-                label[4] = 0
+                label = label + list([0])
     
             return torch.FloatTensor(image), torch.FloatTensor(label)
         
@@ -129,16 +129,18 @@ for seed in range(778,779):
     
     train_dataset = torch.utils.data.DataLoader(dataset=train,
                                                batch_size=batch_size,
-                                               num_workers=16, 
+                                               num_workers=8, 
                                                shuffle=True,
                                                drop_last=False,
-                                               pin_memory = True)
+                                               pin_memory = True,
+                                               persistent_workers = True)
     vali_dataset = torch.utils.data.DataLoader(dataset=vali,
                                                batch_size=batch_size,
-                                               num_workers=16, 
+                                               num_workers=8, 
                                                shuffle=True,
                                                drop_last=False,
-                                               pin_memory = True)
+                                               pin_memory = True,
+                                               persistent_workers = True)
 #    negative_dataset = torch.utils.data.DataLoader(dataset=negative,
 #                                               batch_size=1,
 #                                               shuffle=True,
@@ -298,7 +300,7 @@ for seed in range(778,779):
     # model = nn.DataParallel(CNN().cuda(), device_ids=[2,3])
     # CNN().cuda()
     model = ball_detect().cuda()
-    model = nn.DataParallel(model,device_ids=[0,1,2,3]).cuda()
+    model = nn.DataParallel(model,device_ids=[0,1]).cuda()
 
     # model.load_state_dict(torch.load('{}/result/model{}/cost161_0.0019307868788018823.pth'.format(train_path,folder)))
 #    model = nn.DataParallel(model)
@@ -336,7 +338,7 @@ for seed in range(778,779):
             optimizer.step()
             Y = Y.detach().to('cpu')
             train_IOU, num = negative_IoU(YY, Y)
-            train_mIOU += train_IOU / int(55010*(1-portion_vali))
+            train_mIOU += train_IOU / int(55010*3*(1-portion_vali))
             avg_cost += cost / len(train_dataset.dataset.indices)
             
             del hypothesis
@@ -350,7 +352,7 @@ for seed in range(778,779):
                 vali_YY = vali_hypothesis.detach().to('cpu')
                 vali_cost = obj_GIoU(vali_hypothesis, vali_Y)           
                 vali_IOU, vali_num = negative_IoU(vali_YY, vali_Y.detach().to('cpu'))
-                vali_mIOU += vali_IOU / (int(55010*portion_vali))
+                vali_mIOU += vali_IOU / (int(55010*3*portion_vali))
                 vali_avg_cost += vali_cost / len(vali_dataset.dataset.indices)
         
         if avg_cost < 10:
