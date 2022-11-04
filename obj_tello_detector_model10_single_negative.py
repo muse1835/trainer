@@ -17,6 +17,7 @@ import time
 import torchsummary
 import cv2
 from loss_F import GIoU,IoU,objectness_loss,obj_GIoU,negative_IoU
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 
 pltmode = 0
@@ -32,11 +33,11 @@ device = torch.device('cuda:0')
 torch.cuda.set_device(device)
 
 for seed in range(778,779):  
-    date = '0817'
+    date = '1104'
     model_N = '100_GIOU'
     folder = '22{}_crop_model{}'.format(date,model_N)
-    path = "train_data/crop_negative_blurred35"
-    train_path = "train_data/crop_negative_blurred35"
+    path = "train_data/1030_nonMotion"
+    train_path = "train_data/1030_nonMotion/labels"
     save_path = '{}_result'.format(date)
     
     #create new folder
@@ -57,13 +58,13 @@ for seed in range(778,779):
     # parameters
     image_size = 100
     learning_rate = 0.0001
-    training_epochs = 5000
-    batch_size = 32
+    training_epochs = 2000
+    batch_size = 512
     
     ## image dataset
-    train_balls_frame = pd.read_csv('{}/data.csv'.format(train_path))
+    labels_list = os.listdir(train_path)
 #    negative_frame = pd.read_csv('{}/data.csv'.format(negative_path))
-    n = len(train_balls_frame)
+    n = len(labels_list)
 
     # portion_vali = 0.3
     # portion_test = 0.001
@@ -79,47 +80,35 @@ for seed in range(778,779):
 #        num_dummy = n - num_vali  - num_train
     
 #    negative_dummy = len(negative_frame)- int(0.1*len(negative_frame))
-    class Balldataset(Dataset):
+    class Anafidataset(Dataset):
             
-        def __init__(self, csv_file, root_dir, transform=None):
+        def __init__(self, root_dir):
             """
             Args:
                 csv_file (string): csv 파일의 경로
                 root_dir (string): 모든 이미지가 존재하는 디렉토리 경로
                 transform (callable, optional): 샘플에 적용될 Optional transform
             """
-            self.label_list = os.listdir(root_dir)
+            self.label_list = os.listdir('{}/labels'.format(root_dir))
             self.root_dir = root_dir
             self.transform = 'transform'
             
         def __len__(self):
-            # print(len(self.balls_frame))
-            return len(self.balls_frame)
+            return len(self.label_list)
     
         def __getitem__(self, idx):
             if torch.is_tensor(idx):
                 idx = idx.tolist()
-    
-            img_name = os.path.join(self.root_dir,
-                                    self.balls_frame.iloc[idx, 4])
-            image = io.imread(img_name)
-            image = cv2.resize(image,(image_size,image_size), interpolation=cv2.INTER_AREA)
-            image = image.reshape(image_size, image_size, 3)
+            name = os.path.splitext(self.label_list[idx])[0]
+            image = io.imread('{}/images/{}.jpg'.format(self.root_dir,name))
             image = image.transpose(2,0,1)
-            label = list(np.loadtxt('{}/{}'.format(root_dir,self.label_list[idx]))[1:])
-            #balls = self.balls_frame.iloc[idx, :4]
-            #label = np.empty((5))
-            #label[:4] = balls[:4]/200
-            if sum(label[:2]) != 0:
-                label = label + list([1])
-            elif sum(label[:2]) == 0:
-                label = label + list([0])
-    
+            label = list(np.loadtxt('{}/labels/{}.txt'.format(self.root_dir, name)))
+            label[:4] = [label[i]/100 for i in range(4)]
+
             return torch.FloatTensor(image), torch.FloatTensor(label)
         
         
-    train_set = Balldataset(csv_file='{}/data.csv'.format(train_path),
-                                    root_dir=train_path)
+    train_set = Anafidataset(root_dir=path)
 #    negative_set = Balldataset(csv_file='{}/data.csv'.format(negative_path),
 #                                    root_dir=negative_path)
     
@@ -300,8 +289,8 @@ for seed in range(778,779):
     # model = nn.DataParallel(CNN().cuda(), device_ids=[2,3])
     # CNN().cuda()
     model = ball_detect().cuda()
-    model = nn.DataParallel(model,device_ids=[0,1]).cuda()
-
+   # model = nn.DataParallel(model,device_ids=[0,1,2,3]).cuda()
+    model = DDP(model,device_ids=[0,1,2,3]).cuda()
     # model.load_state_dict(torch.load('{}/result/model{}/cost161_0.0019307868788018823.pth'.format(train_path,folder)))
 #    model = nn.DataParallel(model)
     # define cost/loss & optimizer
@@ -338,9 +327,9 @@ for seed in range(778,779):
             optimizer.step()
             Y = Y.detach().to('cpu')
             train_IOU, num = negative_IoU(YY, Y)
-            train_mIOU += train_IOU / int(55010*3*(1-portion_vali))
-            avg_cost += cost / len(train_dataset.dataset.indices)
-            
+            train_mIOU += train_IOU / int(40914*(1-portion_vali))
+            avg_cost += cost / int(40914*(1-portion_vali))
+            # 162912 for 1026 total data
             del hypothesis
             del cost
         model.eval()
@@ -352,8 +341,8 @@ for seed in range(778,779):
                 vali_YY = vali_hypothesis.detach().to('cpu')
                 vali_cost = obj_GIoU(vali_hypothesis, vali_Y)           
                 vali_IOU, vali_num = negative_IoU(vali_YY, vali_Y.detach().to('cpu'))
-                vali_mIOU += vali_IOU / (int(55010*3*portion_vali))
-                vali_avg_cost += vali_cost / len(vali_dataset.dataset.indices)
+                vali_mIOU += vali_IOU / (int(40914*portion_vali))
+                vali_avg_cost += vali_cost / int(40914*portion_vali)
         
         if avg_cost < 10:
             pltmode = 0
